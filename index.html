@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- Your CSS -->
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+
+  <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+
+    <!-- ======= TOP BAR (always visible) ======= -->
+    <header class="w-full sticky top-0 z-40 bg-white/70 dark:bg-gray-800/70 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="wallet-cards" class="text-teal-600"></i>
+          <span class="font-bold">Expense Tracker</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <!-- removed user-name + logout (no auth) -->
+          <button id="theme-toggle" class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i data-lucide="sun" class="hidden dark:inline"></i>
+            <i data-lucide="moon" class="inline dark:hidden"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ======= APP (visible immediately, no login) ======= -->
+    <div id="app-root">
+      <div id="app-container" class="flex flex-col md:flex-row h-[calc(100vh-56px)]">
+
+        <!-- Sidebar / Navigation (Desktop) -->
+        <nav class="hidden md:flex md:flex-col md:w-64 bg-white dark:bg-gray-800 shadow-lg md:h-[calc(100vh-56px)] justify-between">
+          <div class="flex md:flex-col p-4 md:space-y-4">
+            <!-- Logo -->
+            <div class="flex items-center space-x-2 px-2">
+              <i data-lucide="wallet-cards" class="text-teal-500"></i>
+              <span class="text-xl font-bold text-gray-800 dark:text-white">Expense Tracker</span>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="flex md:flex-col md:space-y-2 md:mt-6">
+              <button data-tab="dashboard" class="nav-tab-btn active flex items-center space-x-2 p-3 rounded-lg font-medium text-sm">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i><span>Dashboard</span>
+              </button>
+              <button data-tab="transactions" class="nav-tab-btn flex items-center space-x-2 p-3 rounded-lg font-medium text-sm">
+                <i data-lucide="list" class="w-5 h-5"></i><span>Transactions</span>
+              </button>
+              <button data-tab="budgets" class="nav-tab-btn flex items-center space-x-2 p-3 rounded-lg font-medium text-sm">
+                <i data-lucide="pie-chart" class="w-5 h-5"></i><span>Budgets</span>
+              </button>
+              <button data-tab="recurring" class="nav-tab-btn flex items-center space-x-2 p-3 rounded-lg font-medium text-sm">
+                <i data-lucide="repeat" class="w-5 h-5"></i><span>Recurring</span>
+              </button>
+              <button data-tab="reports" class="nav-tab-btn flex items-center space-x-2 p-3 rounded-lg font-medium text-sm">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i><span>Reports</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sidebar footer -->
+          <div class="p-4 text-xs opacity-60">
+            <p>Signed in as <span id="sidebar-user" class="font-medium">Guest</span></p>
+          </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+
+          <!-- Dashboard View -->
+          <div id="dashboard-tab" class="tab-content grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-3">
+              <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
+              <p class="text-gray-600 dark:text-gray-400">Welcome! Here's your financial overview for this month.</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="dashboard-empty-state" class="lg:col-span-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center hidden">
+              <i data-lucide="piggy-bank" class="mx-auto h-16 w-16 text-teal-500"></i>
+              <h2 class="mt-4 text-2xl font-bold">Welcome to Expense Tracker!</h2>
+              <p class="mt-2 text-gray-600 dark:text-gray-400">It looks like you haven't added any transactions this month.</p>
+              <button id="empty-state-add-tx" class="mt-6 w-full md:w-auto px-6 py-3 font-semibold text-white bg-teal-600 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-200 flex items-center justify-center space-x-2 mx-auto">
+                <i data-lucide="plus"></i><span>Add Your First Transaction</span>
+              </button>
+            </div>
+
+            <!-- Summary Cards -->
+            <div id="dashboard-summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:col-span-3">
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Balance</span>
+                    <p id="summary-balance" class="text-3xl font-bold">$0.00</p>
+                  </div>
+                  <div class="p-3 rounded-full bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300">
+                    <i data-lucide="scale"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Income</span>
+                    <p id="summary-income" class="text-3xl font-bold text-green-600 dark:text-green-400">$0.00</p>
+                  </div>
+                  <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-300">
+                    <i data-lucide="trending-up"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Expenses</span>
+                    <p id="summary-expenses" class="text-3xl font-bold text-red-600 dark:text-red-400">$0.00</p>
+                  </div>
+                  <div class="p-3 rounded-full bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300">
+                    <i data-lucide="trending-down"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div id="dashboard-quick-actions" class="lg:col-span-3">
+              <div class="flex">
+                <button class="nav-tab-btn flex-1 w-full px-4 py-2 font-semibold text-gray-700 bg-gray-200 rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 transition duration-200 dark:bg-gray-600 dark:text-gray-100 dark:hover:bg-gray-500 dark:focus:ring-gray-500 flex items-center justify-center space-x-2" data-tab="budgets">
+                  <i data-lucide="target"></i><span>Manage Budgets</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transactions View -->
+          <div id="transactions-tab" class="tab-content hidden">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white mb-4">Transactions</h1>
+            <div class="flex flex-wrap gap-4 mb-4">
+              <input id="tx-filter-description" placeholder="Filter by description..." class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500 md:w-auto flex-1">
+              <select id="tx-filter-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-teal-500 appearance-none md:w-auto flex-1">
+                <option value="">All Categories</option>
+              </select>
+              <select id="tx-filter-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-teal-500 appearance-none md:w-auto">
+                <option value="">All Types</option>
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+            </div>
+
+            <div>
+              <div id="transaction-list" class="space-y-3"></div>
+              <div id="tx-list-placeholder" class="text-center py-12 text-gray-500 dark:text-gray-400">
+                <i data-lucide="archive" class="mx-auto h-12 w-12"></i>
+                <h3 class="mt-2 text-sm font-medium">No transactions found</h3>
+                <p class="mt-1 text-sm">Get started by adding a new transaction.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Budgets View -->
+          <div id="budgets-tab" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-4">
+              <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Budgets</h1>
+              <button id="open-add-budget-modal" class="w-auto px-4 py-2 font-semibold text-white bg-teal-600 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-200 flex items-center space-x-2">
+                <i data-lucide="plus"></i><span>New Budget</span>
+              </button>
+            </div>
+            <div>
+              <div id="budget-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+              <div id="budget-list-placeholder" class="md:col-span-2 lg:col-span-3 text-center py-12 text-gray-500 dark:text-gray-400">
+                <i data-lucide="target" class="mx-auto h-12 w-12"></i>
+                <h3 class="mt-2 text-sm font-medium">No budgets set</h3>
+                <p class="mt-1 text-sm">Create budgets to track your spending by category.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recurring View -->
+          <div id="recurring-tab" class="tab-content hidden">
+            <div class="flex justify-between items-center mb-4">
+              <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Recurring Expenses</h1>
+              <button id="open-add-recurring-modal" class="w-auto px-4 py-2 font-semibold text-white bg-teal-600 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-200 flex items-center space-x-2">
+                <i data-lucide="plus"></i><span>New Recurring</span>
+              </button>
+            </div>
+            <div id="recurring-list-container" class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 p-4">
+              <ul id="recurring-list" class="divide-y divide-gray-200 dark:divide-gray-700"></ul>
+              <div id="recurring-list-placeholder" class="text-center py-12 text-gray-500 dark:text-gray-400">
+                <i data-lucide="repeat" class="mx-auto h-12 w-12"></i>
+                <h3 class="mt-2 text-sm font-medium">No recurring expenses</h3>
+                <p class="mt-1 text-sm">Add subscriptions or bills to track them automatically.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reports View -->
+          <div id="reports-tab" class="tab-content hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white lg:col-span-2">Reports</h1>
+
+            <div id="reports-placeholder" class="lg:col-span-2 text-center py-12 text-gray-500 dark:text-gray-400 hidden">
+              <i data-lucide="bar-chart-3" class="mx-auto h-12 w-12"></i>
+              <h3 class="mt-2 text-sm font-medium">Not enough data</h3>
+              <p class="mt-1 text-sm">Add some transactions to see your reports.</p>
+            </div>
+
+            <!-- Fixed height + padding for legend -->
+            <div id="bar-chart-container" class="relative h-72 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 p-6">
+              <h2 class="text-lg font-semibold mb-4">Income vs Expense (Last 6 Months)</h2>
+              <canvas id="bar-chart" class="w-full h-full"></canvas>
+            </div>
+
+            <div id="pie-chart-container" class="relative h-72 w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 p-6">
+              <h2 class="text-lg font-semibold mb-4">Expense by Category (This Month)</h2>
+              <canvas id="pie-chart" class="w-full h-full"></canvas>
+            </div>
+          </div>
+
+        </main>
+      </div>
+
+      <!-- Floating Add Button -->
+      <button id="global-add-tx-btn" class="fixed z-50 bottom-20 md:bottom-8 right-6 md:right-8 bg-teal-600 hover:bg-teal-700 text-white p-4 rounded-full shadow-lg transition-transform duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75">
+        <i data-lucide="plus" class="w-6 h-6"></i>
+      </button>
+
+      <!-- Bottom Navigation (Mobile) -->
+      <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-gray-800 shadow-lg flex justify-around items-center border-t border-gray-200 dark:border-gray-700 z-40">
+        <button data-tab="dashboard" class="nav-tab-btn active flex flex-col items-center justify-center text-xs font-medium p-2">
+          <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i><span>Dashboard</span>
+        </button>
+        <button data-tab="transactions" class="nav-tab-btn flex flex-col items-center justify-center text-xs font-medium p-2">
+          <i data-lucide="list" class="w-5 h-5 mb-1"></i><span>Transactions</span>
+        </button>
+        <button data-tab="budgets" class="nav-tab-btn flex flex-col items-center justify-center text-xs font-medium p-2">
+          <i data-lucide="pie-chart" class="w-5 h-5 mb-1"></i><span>Budgets</span>
+        </button>
+        <button data-tab="recurring" class="nav-tab-btn flex flex-col items-center justify-center text-xs font-medium p-2">
+          <i data-lucide="repeat" class="w-5 h-5 mb-1"></i><span>Recurring</span>
+        </button>
+        <button data-tab="reports" class="nav-tab-btn flex flex-col items-center justify-center text-xs font-medium p-2">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 mb-1"></i><span>Reports</span>
+        </button>
+      </nav>
+
+      <!-- Add/Edit Transaction Modal -->
+      <div id="transaction-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 max-w-lg w-full p-6 transform -translate-y-10">
+          <div class="flex justify-between items-center mb-4">
+            <h2 id="transaction-modal-title" class="text-2xl font-bold">New Transaction</h2>
+            <button id="close-transaction-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <form id="transaction-form" class="space-y-4">
+            <input type="hidden" id="transaction-id">
+            <div>
+              <label for="transaction-type" class="block text-sm font-medium mb-1">Type</label>
+              <select id="transaction-type" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-teal-500 appearance-none" required>
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </div>
+            <div>
+              <label for="transaction-description" class="block text-sm font-medium mb-1">Description</label>
+              <input id="transaction-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500" placeholder="e.g., 'Coffee' or 'Paycheck'" required>
+              <div id="smart-suggestion-container" class="text-sm mt-2 hidden">
+                <span class="text-gray-500 dark:text-gray-400">Suggestion:</span>
+                <button type="button" id="smart-suggestion-btn" class="px-2 py-1 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 rounded-md text-xs font-medium"></button>
+              </div>
+            </div>
+            <div>
+              <label for="transaction-amount" class="block text-sm font-medium mb-1">Amount</label>
+              <input type="number" id="transaction-amount" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500" placeholder="0.00" step="0.01" min="0" required>
+            </div>
+            <div>
+              <label for="transaction-category" class="block text-sm font-medium mb-1">Category</label>
+              <select id="transaction-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-teal-500 appearance-none" required>
+                <option value="Groceries">Groceries</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Rent">Rent</option>
+                <option value="Transport">Transport</option>
+                <option value="Dining Out">Dining Out</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Subscriptions">Subscriptions</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Health">Health</option>
+                <option value="Salary">Salary</option>
+                <option value="Freelance">Freelance</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="transaction-date" class="block text-sm font-medium mb-1">Date</label>
+              <input type="date" id="transaction-date" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500" required>
+            </div>
+            <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-teal-600 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-200">Save Transaction</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Add/Edit Budget Modal -->
+      <div id="budget-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 max-w-lg w-full p-6 transform -translate-y-10">
+          <div class="flex justify-between items-center mb-4">
+            <h2 id="budget-modal-title" class="text-2xl font-bold">New Budget</h2>
+            <button id="close-budget-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <form id="budget-form" class="space-y-4">
+            <input type="hidden" id="budget-id">
+            <div>
+              <label for="budget-category" class="block text-sm font-medium mb-1">Category</label>
+              <select id="budget-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-teal-500 appearance-none" required>
+                <option value="Groceries">Groceries</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Rent">Rent</option>
+                <option value="Transport">Transport</option>
+                <option value="Dining Out">Dining Out</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Subscriptions">Subscriptions</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Health">Health</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="budget-amount" class="block text sm font-medium mb-1">Monthly Amount</label>
+              <input type="number" id="budget-amount" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500" placeholder="0.00" step="0.01" min="0" required>
+            </div>
+            <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-teal-600 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-200">Save Budget</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Add/Edit Recurring Modal -->
+      <div id="recurring-modal" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-50">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 max-w-lg w-full p-6 transform -translate-y-10">
+          <div class="flex justify-between items-center mb-4">
+            <h2 id="recurring-modal-title" class="text-2xl font-bold">New Recurring Expense</h2>
+            <button id="close-recurring-modal" class="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+              <i data-lucide="x"></i>
+            </button>
+          </div>
+          <form id="recurring-form" class="space-y-4">
+            <input type="hidden" id="recurring-id">
+            <div>
+              <label for="recurring-description" class="block text-sm font-medium mb-1">Description</label>
+              <input id="recurring-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500" placeholder="e.g., 'Netflix'" required>
+            </div>
+            <div>
+              <label for="recurring-amount" class="block text sm font-medium mb-1">Amount</label>
+              <input type="number" id="recurring-amount" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500" placeholder="0.00" step="0.01" min="0" required>
+            </div>
+            <div>
+              <label for="recurring-category" class="block text sm font-medium mb-1">Category</label>
+              <select id="recurring-category" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-teal-500 appearance-none" required>
+                <option value="Utilities">Utilities</option>
+                <option value="Rent">Rent</option>
+                <option value="Subscriptions">Subscriptions</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label for="recurring-frequency" class="block text sm font-medium mb-1">Frequency</label>
+              <select id="recurring-frequency" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-teal-500 appearance-none" required>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+              </select>
+            </div>
+            <div>
+              <label for="recurring-start-date" class="block text sm font-medium mb-1">Next Due Date</label>
+              <input type="date" id="recurring-start-date" class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-teal-500 dark:focus:border-teal-500" required>
+            </div>
+            <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-teal-600 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-200">Save Recurring Expense</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Custom Message Box -->
+      <div id="message-box" class="modal-backdrop fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden opacity-0 z-[60]">
+        <div class="modal-content bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-all duration-300 max-w-sm w-full p-6 transform -translate-y-10">
+          <h3 id="message-box-title" class="text-lg font-bold mb-4">Message</h3>
+          <p id="message-box-text" class="text-sm text-gray-700 dark:text-gray-300 mb-6"></p>
+          <button id="message-box-ok" class="w-full px-4 py-2 font-semibold text-white bg-teal-600 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition duration-200">OK</button>
+        </div>
+      </div>
+    </div>
+<!-- ======= Portfolio Footer ======= -->
+<footer class="w-full text-center py-6 mt-8">
+  <div class="flex flex-col items-center gap-2">
+
+    <!-- Gradient Line -->
+    <div class="h-[2px] w-32 rounded-full bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-400 dark:from-emerald-500 dark:via-emerald-300 dark:to-emerald-500 mb-2"></div>
+
+    <p class="text-xs font-medium text-gray-600 dark:text-gray-400">
+      © <span id="year"></span> Suchith Pavan — All Rights Reserved
+    </p>
+
+    <!-- Social Icons -->
+    <div class="flex gap-4 mt-1">
+
+      <!-- GitHub -->
+      <a href="https://github.com/https://github.com/Suchith-17" target="_blank" 
+         class="text-gray-600 dark:text-emerald-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+        <i data-lucide="github" class="w-5 h-5"></i>
+      </a>
+
+      <!-- LinkedIn -->
+      <a href="https://linkedin.com/in/in/suchith-pavan-6a871821a" target="_blank"
+         class="text-gray-600 dark:text-emerald-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+        <i data-lucide="linkedin" class="w-5 h-5"></i>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Auto Year
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // Re-render icons (footer loads after page)
+  window.addEventListener("load", () => {
+    if (window.lucide) window.lucide.createIcons();
+  });   
+</script>
+  <!-- Your JS -->
+    <script src="./assets/app.js"></script>
+    <script src="./assets/auth.js"></script>
+  </body>
+</html>
+
+
+
+   

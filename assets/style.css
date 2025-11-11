@@ -1,0 +1,306 @@
+  /* ============= Base ============= */
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#eef2f0;border-radius:10px}
+.dark ::-webkit-scrollbar-track{background:#141a17}
+::-webkit-scrollbar-thumb{background:#9fb3a9;border-radius:10px}
+.dark ::-webkit-scrollbar-thumb{background:#2a3a34}
+::-webkit-scrollbar-thumb:hover{background:#7fa091}
+.dark ::-webkit-scrollbar-thumb:hover{background:#3a4a44}
+
+/* Modal transition */
+.modal-backdrop{transition:opacity .3s ease-in-out}
+.modal-content{transition:transform .3s ease-in-out}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:1rem;height:1rem;border:2px solid transparent;border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+
+/* ================= Theme toggled elements ================= */
+
+/* Light: clean white + emerald accents (softer) */
+html:not(.dark) body {
+  background:#f3f6f4;          /* softer than white */
+  color:#0f1b16;
+}
+
+/* Keep surfaces white in light mode, but allow subtle separation */
+html:not(.dark) .bg-white { background:#ffffff !important; }
+html:not(.dark) .bg-white,
+html:not(.dark) .dark\:bg-gray-800 {
+  border:1px solid #e7ecea;
+  box-shadow:0 6px 18px rgba(0,0,0,0.04);
+}
+
+/* Map teal utilities to emerald in light (buttons/icons) */
+html:not(.dark) .bg-teal-600 { background-color:#16a34a !important; }
+html:not(.dark) .hover\:bg-teal-700:hover { background-color:#15803d !important; }
+html:not(.dark) .text-teal-600 { color:#16a34a !important; }
+html:not(.dark) .bg-teal-100 { background-color:#dcfce7 !important; }
+html:not(.dark) .text-green-600 { color:#16a34a !important; }
+html:not(.dark) .bg-green-100 { background-color:#dcfce7 !important; }
+
+/* Light: tabs + icons should not feel “white on white” */
+html:not(.dark) .nav-tab-btn {
+  background:#f6fbf8;                 /* soft mint tile */
+  color:#0b3d2e;                      /* deep emerald text */
+  border:1px solid #e5f0eb;
+}
+html:not(.dark) .nav-tab-btn i { color:#0f766e; opacity:.95; }
+html:not(.dark) .nav-tab-btn:hover { background:#eef7f1; }
+html:not(.dark) .nav-tab-btn.active {
+  background:#dcfce7 !important;
+  color:#166534 !important;
+  border-color:#bfe9cd;
+}
+
+/* Dark: deep black + emerald */
+.dark body {
+  background:#090d0b;      /* deep black with faint green hint */
+  color:#e6eee9;
+}
+
+/* Dark surfaces: deep black card with subtle emerald ring */
+.dark .bg-gray-800,
+.dark .dark\:bg-gray-800 {
+  background:#0b0f14 !important;
+  border:1px solid rgba(16,185,129,0.12);
+  box-shadow:0 8px 24px rgba(16,185,129,0.06);
+}
+
+/* Emerald utilities in dark */
+.dark .bg-teal-600 { background-color:#16a34a !important; }
+.dark .hover\:bg-teal-700:hover { background-color:#15803d !important; }
+.dark .text-teal-300 { color:#a7f3d0 !important; }
+.dark .bg-teal-900 { background-color:#052e16 !important; }
+
+/* Dark active tabs: emerald glass */
+.dark .nav-tab-btn {
+  background:#0e1512;
+  color:#a7f3d0;
+  border:1px solid rgba(16,185,129,0.12);
+}
+.dark .nav-tab-btn:hover { background:#0f1814; }
+.dark .nav-tab-btn.active {
+  background:linear-gradient(135deg, rgba(16,185,129,0.18), rgba(6,78,59,0.22)) !important;
+  color:#a7f3d0 !important;
+  border:1px solid rgba(16,185,129,0.22);
+}
+
+/* Optional gold accents utilities */
+.gold-accent { color:#f4d03f; }
+.gold-ring { box-shadow:0 0 0 2px #f4d03f; }
+
+/* ============= Summary (Balance/Income/Expenses) ============= */
+
+/* Make Total Balance GOLD in BOTH themes */
+#summary-balance { color:#d4af37 !important; }       /* gold */
+
+/* Improve label readability */
+html:not(.dark) #dashboard-summary-cards span.text-sm,
+html:not(.dark) #dashboard-summary-cards p.text-sm { color:#475569 !important; }
+
+/* Keep numbers readable in light */
+html:not(.dark) #summary-income { color:#166534 !important; }  /* dark green */
+html:not(.dark) #summary-expenses { color:#b91c1c !important; }/* dark red */
+
+/* ============= Charts ============= */
+
+/* Lock size + add extra bottom space for legends */
+#bar-chart-container,
+#pie-chart-container {
+  position:relative;
+  overflow:hidden;
+  height:22rem;               /* taller so legends never clip */
+  padding-bottom:1.5rem;      /* extra breathing room */
+}
+
+/* Canvases fill card area */
+#bar-chart, #pie-chart {
+  width:100% !important;
+  height:100% !important;
+  display:block;
+}
+
+/* Dark chart cards with emerald glow */
+.dark #bar-chart-container,
+.dark #pie-chart-container {
+  background:
+    radial-gradient(1200px 600px at 10% -20%, rgba(16,185,129,0.18) 0%, rgba(11,15,20,1) 34%),
+    linear-gradient(180deg, rgba(11,15,20,1), rgba(11,15,20,1)) !important;
+  border:1px solid rgba(16,185,129,0.18);
+}
+
+/* Chart headings in dark with accent underline */
+.dark #bar-chart-container h2,
+.dark #pie-chart-container h2 {
+  color:#d1fae5;
+  position:relative;
+}
+.dark #bar-chart-container h2::after,
+.dark #pie-chart-container h2::after {
+  content:"";
+  position:absolute;
+  left:0; bottom:-10px;
+  width:64px; height:2px;
+  background:linear-gradient(90deg, #10b981, #f4d03f);
+  border-radius:2px;
+}
+
+/* (Optional) external legend + tooltip themes if you add them later */
+.dark .chart-legend-item span { border:2px solid rgba(16,185,129,0.8); }
+.dark .chart-legend-item.active span { background-color:rgba(16,185,129,0.8); }
+.dark .chart-legend-item { color:#d1fae5; }
+.dark .chartjs-tooltip { background:rgba(11,15,20,0.9); border:1px solid rgba(16,185,129,0.8); color:#d1fae5; }
+.dark .chartjs-tooltip::after { border-top-color:rgba(11,15,20,0.9); }
+
+/* ============= Auth (login view) ============= */
+#login-view .login-card {
+  border:1px solid #e7ecea;
+  box-shadow:0 8px 24px rgba(0,0,0,0.06);
+}
+html:not(.dark) #login-view { background:#f3f6f4; }
+.dark #login-view { background:#090d0b; }
+.dark #login-view .login-card {
+  background:#0b0f14;
+  border:1px solid rgba(16,185,129,0.12);
+  box-shadow:0 10px 28px rgba(16,185,129,0.08);
+}
+/* Input fields */
+#login-view .login-card input {
+  background:#f9faf9;
+  border:1px solid #cbd5d1;
+  color:#0f1b16;
+}
+.dark #login-view .login-card input {
+  background:#11201c;
+  border:1px solid rgba(16,185,129,0.12);
+  color:#e6eee9;
+}
+#login-view .login-card input::placeholder {
+  color:#6b7280;
+}
+.dark #login-view .login-card input::placeholder {
+  color:#94a3b8;
+}
+/* Login button */
+#login-view .login-card .btn-primary {
+  background-color:#16a34a;
+  border-color:#16a34a;
+}
+#login-view .login-card .btn-primary:hover {
+  background-color:#15803d;
+  border-color:#15803d;
+}
+.dark #login-view .login-card .btn-primary {
+  background-color:#16a34a;
+  border-color:#16a34a;
+}
+.dark #login-view .login-card .btn-primary:hover {
+  background-color:#15803d;
+  border-color:#15803d;
+}
+/* Links */
+#login-view .login-card a {
+  color:#16a34a;
+}
+.dark #login-view .login-card a {
+  color:#a7f3d0;
+}
+/* Error messages */
+#login-view .login-card .error-message {
+  color:#b91c1c;
+}
+.dark #login-view .login-card .error-message {
+  color:#fca5a5;
+}
+
+
+/* ============= Buttons ============= */
+.btn-primary {
+  background-color:#16a34a;
+  border-color:#16a34a;
+  color:#ffffff;
+}
+.btn-primary:hover {
+  background-color:#15803d;
+  border-color:#15803d;
+  color:#ffffff;
+}
+.dark .btn-primary {
+  background-color:#16a34a;
+  border-color:#16a34a;
+  color:#ffffff;
+}
+.dark .btn-primary:hover {
+  background-color:#15803d;
+  border-color:#15803d;
+  color:#ffffff;
+}
+.btn-secondary {
+  background-color:#6b7280;
+  border-color:#6b7280;
+  color:#ffffff;
+}
+.btn-secondary:hover {
+  background-color:#4b5563;
+  border-color:#4b5563;
+  color:#ffffff;
+}
+.dark .btn-secondary {
+  background-color:#6b7280;
+  border-color:#6b7280;
+  color:#ffffff;
+}
+.dark .btn-secondary:hover {
+  background-color:#4b5563;
+  border-color:#4b5563;
+  color:#ffffff;
+}
+/* ============= Inputs ============= */
+.input-field {
+  background-color:#f9faf9;
+  border:1px solid #cbd5d1;
+  color:#0f1b16;
+}
+.input-field::placeholder {
+  color:#6b7280;
+}
+.input-field:focus {
+  border-color:#16a34a;
+  box-shadow:0 0 0 3px rgba(22,163,74,0.3);
+}
+.dark .input-field {
+  background-color:#11201c;
+  border:1px solid rgba(16,185,129,0.12);
+  color:#e6eee9;
+}
+.dark .input-field::placeholder {
+  color:#94a3b8;
+}
+.dark .input-field:focus {
+  border-color:#16a34a;
+  box-shadow:0 0 0 3px rgba(22,163,74,0.3);
+}
+/* ============= Cards ============= */
+.card {
+  background-color:#ffffff;
+  border:1px solid #e7ecea;
+  box-shadow:0 6px 18px rgba(0,0,0,0.04);
+}
+.dark .card {
+  background-color:#0b0f14;
+  border:1px solid rgba(16,185,129,0.12);
+  box-shadow:0 8px 24px rgba(16,185,129,0.06);
+}
+/* ============= Nav Bar ============= */
+.navbar {
+  background-color:#f6fbf8;
+  border-bottom:1px solid #e5f0eb;
+}
